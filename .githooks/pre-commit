@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+printf '%s\n' 'Running SpeedReader pre-commit checks...'
+pnpm check

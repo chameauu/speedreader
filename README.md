@@ -54,4 +54,3 @@ pnpm tauri build
 ## Notes
 
 This project is designed as a desktop application first, not a web app. The focus is on instant text-to-reading flow, a clutter-free overlay, and a native background experience.
-
