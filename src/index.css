@@ -14,6 +14,7 @@
   --accent-shadow: rgba(230, 75, 106, 0.24);
   --focus-ring: rgba(230, 75, 106, 0.35);
   --shadow: 0 28px 80px rgba(32, 38, 56, 0.15);
+  --overlay-background: rgba(255, 255, 255, 0.82);
 
   font-family:
     Inter,
@@ -28,7 +29,7 @@
   font-weight: 400;
   color-scheme: light dark;
   color: var(--text-primary);
-  background: var(--background);
+  background: transparent;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -52,17 +53,20 @@
     --accent-shadow: rgba(255, 102, 132, 0.22);
     --focus-ring: rgba(255, 102, 132, 0.4);
     --shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+    --overlay-background: rgba(26, 29, 38, 0.82);
   }
 }
 
 #root {
   min-height: 100vh;
+  background: transparent;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: transparent;
 }
 
 * {

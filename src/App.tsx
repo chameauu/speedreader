@@ -51,26 +51,23 @@ function App() {
     setCurrentIndex(0)
   }
 
+  async function startWindowDrag(event: React.MouseEvent<HTMLDivElement>) {
+    if (event.button !== 0) {
+      return
+    }
+
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window')
+      await getCurrentWindow().startDragging()
+    } catch {
+      // no-op outside Tauri
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="reader" aria-label="Speed reader">
-        <header className="reader-header">
-          <div className="brand">
-            <span className="brand-mark" aria-hidden="true">
-              S
-            </span>
-            <span>SpeedReader</span>
-          </div>
-          <button
-            className="icon-button close-button"
-            type="button"
-            aria-label="Close reader"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-        </header>
-
-        <div className="reading-area">
+        <div className="reading-area" onMouseDown={startWindowDrag}>
           <div className="focus-guide focus-guide-top" aria-hidden="true" />
           <FocusedWord word={currentWord} />
           <div className="focus-guide focus-guide-bottom" aria-hidden="true" />
