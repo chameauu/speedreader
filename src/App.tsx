@@ -1,17 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
-import { getFocusIndex } from './reader'
+import { getFocusIndex, getWordDelayMs, tokenizeText } from './reader'
 
-const previewWords = [
-  'Reading',
-  'becomes',
-  'easier',
-  'when',
-  'your',
-  'focus',
-  'stays',
-  'still.',
-]
+const previewText =
+  'Reading becomes easier when your focus stays still. Short pauses follow commas, and longer pauses follow sentences.'
 
 function FocusedWord({ word }: { word: string }) {
   const focusIndex = getFocusIndex(word)
@@ -29,12 +21,15 @@ function FocusedWord({ word }: { word: string }) {
 }
 
 function App() {
-  const [currentIndex, setCurrentIndex] = useState(2)
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [wordsPerMinute, setWordsPerMinute] = useState(300)
+  const timeoutRef = useRef<number | null>(null)
 
-  const currentWord = previewWords[currentIndex]
-  const progress = ((currentIndex + 1) / previewWords.length) * 100
+  const words = useMemo(() => tokenizeText(previewText), [])
+
+  const currentWord = words[currentIndex] ?? ''
+  const progress = words.length ? ((currentIndex + 1) / words.length) * 100 : 0
 
   function showPreviousWord() {
     setIsPlaying(false)
@@ -43,12 +38,26 @@ function App() {
 
   function showNextWord() {
     setIsPlaying(false)
-    setCurrentIndex((index) => Math.min(previewWords.length - 1, index + 1))
+    setCurrentIndex((index) => Math.min(words.length - 1, index + 1))
   }
 
   function restart() {
     setIsPlaying(false)
     setCurrentIndex(0)
+  }
+
+  function togglePlayback() {
+    if (words.length === 0) {
+      return
+    }
+
+    if (currentIndex >= words.length - 1) {
+      setCurrentIndex(0)
+      setIsPlaying(true)
+      return
+    }
+
+    setIsPlaying((playing) => !playing)
   }
 
   async function startWindowDrag(event: React.MouseEvent<HTMLDivElement>) {
@@ -64,6 +73,40 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    if (!isPlaying) {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+      return
+    }
+
+    if (!words.length || currentIndex >= words.length - 1) {
+      return
+    }
+
+    const delay = getWordDelayMs(currentWord, wordsPerMinute)
+    timeoutRef.current = window.setTimeout(() => {
+      setCurrentIndex((index) => {
+        const nextIndex = Math.min(words.length - 1, index + 1)
+
+        if (nextIndex >= words.length - 1) {
+          setIsPlaying(false)
+        }
+
+        return nextIndex
+      })
+    }, delay)
+
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
+  }, [currentIndex, currentWord, isPlaying, words.length, wordsPerMinute])
+
   return (
     <main className="app-shell">
       <section className="reader" aria-label="Speed reader">
@@ -77,7 +120,7 @@ function App() {
           <div className="progress-meta">
             <span>{isPlaying ? 'Reading' : 'Paused'}</span>
             <span>
-              {currentIndex + 1} / {previewWords.length}
+              {words.length ? currentIndex + 1 : 0} / {words.length}
             </span>
           </div>
           <div
@@ -85,7 +128,7 @@ function App() {
             role="progressbar"
             aria-label="Reading progress"
             aria-valuemin={1}
-            aria-valuemax={previewWords.length}
+            aria-valuemax={words.length}
             aria-valuenow={currentIndex + 1}
           >
             <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -112,7 +155,7 @@ function App() {
           <button
             className="play-button"
             type="button"
-            onClick={() => setIsPlaying((playing) => !playing)}
+            onClick={togglePlayback}
             aria-label={isPlaying ? 'Pause' : 'Resume'}
           >
             <span aria-hidden="true">{isPlaying ? 'Ⅱ' : '▶'}</span>
